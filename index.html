@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Naš Mali Svemir ❤️</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   NAS MALI SVEMIR — pristupni terminal koji otkljucava jedan
+   topao, licni univerzum. Dva jezika u dizajnu:
+   - mehanika/pristup -> monospace + jantar (amber)
+   - osjecaj/uspomena  -> serif kurziv + ruza (rose)
+   ============================================================ */
+
+:root {
+    --void: #0a0908;
+    --panel: #15120e;
+    --panel-2: #1c1710;
+    --line: rgba(238, 224, 200, 0.13);
+    --line-soft: rgba(238, 224, 200, 0.07);
+    --ink: #f2ebe0;
+    --ink-dim: rgba(242, 235, 224, 0.5);
+    --ink-faint: rgba(242, 235, 224, 0.28);
+    --amber: #cf9a55;
+    --amber-bright: #ecc17e;
+    --amber-dim: rgba(207, 154, 85, 0.14);
+    --rose: #ff5f7e;
+    --rose-deep: #d43e63;
+    --rose-dim: rgba(255, 95, 126, 0.16);
+    --ease: cubic-bezier(.22, .9, .32, 1);
+    --radius: 4px;
+    --radius-soft: 22px;
+    --font-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    --font-serif: 'Fraunces', Georgia, serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+
+body {
+    width: 100vw;
+    height: 100vh;
+    background: var(--void);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-weight: 400;
+    overflow: hidden;
+    position: relative;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* vinjeta + vrlo suptilne skener-linije, kao stari monitor */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 998;
+    pointer-events: none;
+    background:
+        repeating-linear-gradient(rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.10) 3px),
+        radial-gradient(ellipse 120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%);
+    opacity: 0.5;
+}
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0.03;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+/* Sakrivanje/prikazivanje pogleda (viewova) */
+.view {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .5s var(--ease);
+}
+.view.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+.view.active .container {
+    animation: viewIn .55s var(--ease) both;
+}
+@keyframes viewIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Stil kartice/kontejnera — panel s tankim rubom, ostro sjeceni uglovi,
+   jantarna traka na vrhu kao oznaka "pristupnog terminala" */
+.container {
+    width: min(380px, calc(100% - 20px));
+    background: linear-gradient(175deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 38px 28px 32px;
+    text-align: center;
+    box-shadow: 0 30px 70px rgba(0,0,0,.55);
+    position: relative;
+    z-index: 10;
+}
+.container::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 14%; right: 14%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--amber), transparent);
+    opacity: .55;
+}
+
+.heart-icon {
+    font-size: 22px;
+    color: var(--amber-bright);
+    text-shadow: 0 0 16px rgba(207, 154, 85, 0.4);
+    animation: pulse 2.6s ease-in-out infinite;
+    margin-bottom: 14px;
+    display: inline-block;
+}
+#view-xo .heart-icon, .success-screen .heart-icon, .modal-xo .heart-icon {
+    color: var(--rose);
+    text-shadow: 0 0 20px var(--rose-deep);
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+h1 {
+    font-family: var(--font-serif);
+    font-size: 25px;
+    font-weight: 500;
+    font-style: italic;
+    letter-spacing: 0.2px;
+    margin-bottom: 6px;
+    color: var(--ink);
+}
+
+.subtitle {
+    font-size: 11px;
+    color: var(--ink-dim);
+    margin-bottom: 26px;
+    line-height: 1.7;
+    letter-spacing: 0.1px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 20px;
+    font-size: 11px;
+    color: var(--ink-faint);
+    text-decoration: none;
+    transition: color .25s var(--ease), transform .25s var(--ease);
+    cursor: pointer;
+}
+.back-link:hover {
+    color: var(--amber-bright);
+    transform: translateX(-2px);
+}
+
+/* --- 1. INDEX / UVODNI EKRAN (matrix i animacija) --- */
+#view-index {
+    background: #000;
+}
+#matrix-rain, .canvas-index {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+}
+#matrix-rain { z-index: 1; }
+.canvas-index { z-index: 9999; }
+.stars-container {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    pointer-events: none;
+    display: none;
+}
+.star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 2s infinite;
+}
+@keyframes twinkle {0%,100%{opacity:0.2}50%{opacity:1}}
+.firework-container {
+    position: fixed;
+    left: 50%; top: 50%;
+    width: 200px; height: 200px;
+    transform: translate(-50%,-50%);
+    z-index: 200; pointer-events: none; opacity: 0;
+}
+.firework {
+    position: absolute; left: 50%; top: 50%;
+    width: 6px; height: 20px;
+    background: radial-gradient(circle,white 0%,transparent 70%);
+    border-radius: 50% 50% 0 0;
+    transform-origin: bottom center; opacity: 0;
+    animation: fireworkExplode 1s ease forwards;
+}
+@keyframes fireworkExplode {0%{opacity:1;transform:translateY(0) scaleY(1)}100%{opacity:0;transform:translateY(-100px) scaleY(3)}}
+
+/* --- 2. MENU — direktorij, ne kartice --- */
+.menu-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 6px;
+}
+.menu-btn {
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--line-soft);
+    padding: 18px 2px;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: padding-left .3s var(--ease), color .3s var(--ease);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    animation: itemIn .5s var(--ease) both;
+}
+.menu-list .menu-btn:last-child { border-bottom: 1px solid var(--line-soft); }
+.menu-list .menu-btn:nth-child(1) { animation-delay: .04s; }
+.menu-list .menu-btn:nth-child(2) { animation-delay: .1s; }
+.menu-list .menu-btn:nth-child(3) { animation-delay: .16s; }
+.menu-list .menu-btn:nth-child(4) { animation-delay: .22s; }
+@keyframes itemIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.menu-btn span { font-family: var(--font-mono); font-size: 13px; opacity: .35; transition: opacity .3s var(--ease), color .3s var(--ease); color: var(--amber); }
+.menu-btn:hover, .menu-btn:focus-visible {
+    padding-left: 10px;
+    color: var(--amber-bright);
+}
+.menu-btn:hover span { opacity: 1; color: var(--rose); }
+.menu-btn:active { padding-left: 14px; }
+.footer-text {
+    margin-top: 30px;
+    font-size: 9.5px;
+    color: var(--ink-faint);
+    letter-spacing: 1px;
+}
+
+/* --- 3. SIFRA — pristupni panel --- */
+.pin-display {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.pin-dot {
+    width: 13px; height: 17px;
+    border-radius: 2px;
+    border: 1px solid rgba(207, 154, 85, 0.4);
+    background: rgba(207, 154, 85, 0.05);
+    transition: transform .2s var(--ease), background .2s var(--ease), box-shadow .2s var(--ease);
+}
+.pin-dot.filled {
+    background: var(--amber);
+    box-shadow: 0 0 12px rgba(207, 154, 85, .7);
+    border-color: var(--amber);
+    transform: scaleY(1.12);
+}
+.custom-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+}
+.key-btn {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    height: 54px;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s var(--ease), border-color .2s var(--ease), transform .15s var(--ease);
+    display: flex; align-items: center; justify-content: center;
+}
+.key-btn:hover, .key-btn:focus-visible {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+}
+.key-btn:active { transform: scale(0.93); }
+.hint {
+    font-size: 11.5px;
+    color: var(--rose);
+    min-height: 38px;
+    margin-top: 10px;
+    line-height: 1.6;
+    font-family: var(--font-mono);
+}
+.success-screen {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 50% 40%, #2a0f22, #08040a 72%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 25px;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.9s var(--ease);
+}
+.success-screen.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+.success-screen.show .heart-icon { font-size: 34px; animation: pulse 2.2s ease-in-out infinite, popIn .7s var(--ease) both; }
+@keyframes popIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    60% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); }
+}
+.success-screen h2 {
+    font-family: var(--font-serif);
+    font-size: clamp(30px, 6vw, 46px);
+    font-weight: 600;
+    font-style: italic;
+    letter-spacing: 0.3px;
+    margin-bottom: 16px;
+    text-shadow: 0 0 30px rgba(255, 95, 126, 0.35);
+}
+.success-screen p {
+    color: rgba(242, 235, 224, 0.72);
+    font-size: 14.5px;
+    font-family: var(--font-mono);
+    line-height: 1.9;
+    max-width: 400px;
+}
+
+/* --- 4. TILE (IGRA PLOČICE) --- */
+#game-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 9px;
+    margin-bottom: 16px;
+}
+.tile {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    aspect-ratio: 1;
+    color: var(--ink);
+    font-size: 24px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: background .25s var(--ease), border-color .25s var(--ease), transform .2s var(--ease);
+}
+.tile:hover {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+}
+.tile.flipped {
+    animation: flipTile .35s var(--ease);
+}
+@keyframes flipTile {
+    0% { transform: scale(.9) rotateY(90deg); }
+    100% { transform: scale(1) rotateY(0deg); }
+}
+.tile.matched {
+    background: var(--rose-dim);
+    border-color: var(--rose);
+    box-shadow: 0 0 14px rgba(255, 95, 126, 0.25);
+    cursor: default;
+    transform: none;
+    animation: matchPulse .5s var(--ease);
+}
+@keyframes matchPulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+}
+#finalMessageTiles {
+    display: none;
+    font-size: 12px;
+    color: var(--rose);
+    font-family: var(--font-mono);
+    margin-top: 14px;
+    line-height: 1.7;
+    animation: itemIn .5s var(--ease) both;
+}
+
+/* --- 5. UNIVERZUM --- */
+#view-univerzum {
+    background: #010106;
+}
+#space {
+    position: fixed;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+.intro-universe {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: radial-gradient(circle at center, rgba(150, 30, 70, .35), rgba(0, 0, 0, .97) 70%);
+    transition: opacity 1.3s ease;
+}
+.intro-universe.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+.intro-content { padding: 30px; animation: itemIn .8s var(--ease) both; }
+.intro-small {
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: rgba(242,235,224,.4);
+    font-family: var(--font-mono);
+}
+.intro-universe h1 {
+    margin-top: 22px;
+    font-family: var(--font-serif);
+    font-size: clamp(40px, 9vw, 82px);
+    font-weight: 500;
+    font-style: italic;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 45px rgba(255,95,126,.3);
+}
+.intro-universe p {
+    margin-top: 18px;
+    color: rgba(242,235,224,.6);
+    font-size: 13.5px;
+    line-height: 2;
+    font-family: var(--font-mono);
+}
+.intro-heart { color: var(--rose); text-shadow: 0 0 20px var(--rose-deep); }
+.enter {
+    margin-top: 36px;
+    padding: 15px 30px;
+    border: 1px solid rgba(255,95,126,.35);
+    border-radius: 2px;
+    background: rgba(255,95,126,.06);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    cursor: pointer;
+    letter-spacing: 1.5px;
+    font-size: 11px;
+    font-weight: 700;
+    transition: background .3s var(--ease), box-shadow .3s var(--ease), transform .3s var(--ease);
+    box-shadow: 0 0 25px rgba(255,95,126,.08);
+}
+.enter:hover, .enter:focus-visible {
+    background: rgba(255,95,126,.14);
+    box-shadow: 0 0 35px rgba(255,95,126,.2);
+    transform: scale(1.03);
+}
+.ui-universe {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+}
+.top-universe {
+    position: absolute;
+    top: calc(22px + env(safe-area-inset-top, 0px)); left: 25px;
+    pointer-events: auto;
+}
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+    padding: 9px 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    color: rgba(242, 235, 224, 0.75);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    text-decoration: none;
+    transition: background .3s var(--ease), border-color .3s var(--ease), transform .3s var(--ease);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+}
+.back-btn:hover, .back-btn:focus-visible {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    color: var(--ink);
+    transform: translateX(-3px);
+}
+.heading-universe {
+    margin-top: 6px;
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-shadow: 0 0 18px rgba(255,95,126,.2);
+}
+.subtitle-universe {
+    margin-top: 6px;
+    font-size: 10.5px;
+    color: rgba(242,235,224,.38);
+    font-family: var(--font-mono);
+}
+.help-universe {
+    position: absolute;
+    top: calc(25px + env(safe-area-inset-top, 0px)); right: 25px;
+    text-align: right;
+    color: rgba(242,235,224,.32);
+    font-size: 9px;
+    font-family: var(--font-mono);
+    line-height: 1.9;
+}
+.bottom-universe {
+    position: absolute;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 25px;
+    color: rgba(242,235,224,.3);
+    font-size: 9px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+}
+.memory {
+    position: fixed;
+    z-index: 15;
+    left: 50%; top: 50%;
+    width: min(430px, calc(100% - 30px));
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translate(-50%, -50%) scale(.95) translateY(8px);
+    opacity: 0;
+    pointer-events: none;
+    background: linear-gradient(175deg, #150f10, #0c0809);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 4px;
+    text-align: center;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    transition: opacity .4s var(--ease), transform .4s var(--ease);
+}
+.memory.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1) translateY(0);
+}
+.memory-image {
+    width: 100%;
+    max-height: 320px;
+    object-fit: cover;
+    border-radius: 2px;
+    display: block;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, rgba(255,95,126,.1), rgba(207,154,85,.06));
+    min-height: 120px;
+}
+.memory-heart {
+    font-size: 28px;
+    color: var(--rose);
+    text-shadow: 0 0 22px var(--rose-deep);
+    animation: heartPulse 2s ease-in-out infinite;
+}
+@keyframes heartPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+.memory-date {
+    margin-top: 12px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--amber);
+    font-family: var(--font-mono);
+    padding: 0 24px 16px;
+}
+.memory h2 {
+    margin: 6px 24px 14px;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-style: italic;
+    font-size: 23px;
+    letter-spacing: .2px;
+}
+.memory p {
+    color: rgba(242,235,224,.7);
+    font-size: 13px;
+    font-family: var(--font-mono);
+    line-height: 1.9;
+    padding: 0 24px 24px;
+}
+.close {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 34px; height: 34px;
+    border: 1px solid var(--line); border-radius: 2px;
+    background: rgba(0,0,0,.3);
+    color: var(--ink); font-size: 17px;
+    font-family: var(--font-mono);
+    cursor: pointer; z-index: 5;
+    transition: background .25s var(--ease), border-color .25s var(--ease);
+    display: flex; align-items: center; justify-content: center;
+}
+.close:hover, .close:focus-visible { background: var(--rose-dim); border-color: var(--rose); }
+
+/* --- VLOG POP-UP --- */
+.vlog-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: rgba(6, 5, 4, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .4s var(--ease);
+}
+.vlog-modal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+.vlog-box {
+    position: relative;
+    width: min(480px, 100%);
+    background: linear-gradient(175deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    transform: scale(.95) translateY(8px);
+    transition: transform .4s var(--ease);
+}
+.vlog-modal.show .vlog-box {
+    transform: scale(1) translateY(0);
+}
+.vlog-box video {
+    width: 100%;
+    max-height: 70vh;
+    display: block;
+    border-radius: 2px;
+    background: #000;
+}
+.vlog-title {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 17px;
+    margin-top: 14px;
+    text-align: center;
+    color: var(--ink);
+}
+.vlog-close {
+    position: absolute;
+    top: -14px; right: -14px;
+    width: 34px; height: 34px;
+    border: 1px solid var(--line); border-radius: 2px;
+    background: var(--panel-2);
+    color: var(--ink); font-size: 17px;
+    font-family: var(--font-mono);
+    cursor: pointer; z-index: 5;
+    transition: background .25s var(--ease), border-color .25s var(--ease);
+    display: flex; align-items: center; justify-content: center;
+}
+.vlog-close:hover, .vlog-close:focus-visible { background: var(--rose-dim); border-color: var(--rose); }
+
+/* --- PRANK: "PRIHVATI ME ZAUVIJEK" MODAL --- */
+.prank-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 600;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: rgba(6, 5, 4, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .4s var(--ease);
+}
+.prank-modal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+.prank-box {
+    position: relative;
+    width: min(360px, 100%);
+    height: 300px;
+    background: linear-gradient(175deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 28px 22px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.6);
+    transform: scale(.95) translateY(8px);
+    transition: transform .4s var(--ease);
+    overflow: hidden;
+}
+.prank-modal.show .prank-box {
+    transform: scale(1) translateY(0);
+}
+.prank-box .heart-icon { margin-bottom: 10px; color: var(--rose); text-shadow: 0 0 20px var(--rose-deep); }
+.prank-box h2 {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--ink);
+    margin-bottom: 8px;
+}
+.prank-box p {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--ink-dim);
+    line-height: 1.6;
+    margin-bottom: 4px;
+}
+.prank-counter {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--ink-faint);
+    letter-spacing: .3px;
+    margin-bottom: 6px;
+    min-height: 14px;
+}
+.prank-btn-row {
+    position: relative;
+    width: 100%;
+    height: 76px;
+    margin-top: 6px;
+}
+.prank-no-btn {
+    position: relative;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 12px 20px;
+    color: var(--ink-faint);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+}
+.prank-no-btn:hover { border-color: var(--ink-faint); }
+.prank-yes-btn {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    background: var(--rose-dim);
+    border: 1px solid var(--rose);
+    border-radius: 2px;
+    padding: 12px 22px;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .3px;
+    cursor: pointer;
+    transition: left .18s var(--ease), top .18s var(--ease), transform .18s var(--ease), background .25s var(--ease), box-shadow .25s var(--ease);
+    white-space: nowrap;
+    z-index: 2;
+}
+.prank-yes-btn.caught {
+    animation: prankCaught .5s var(--ease);
+    background: var(--rose);
+    box-shadow: 0 0 24px rgba(255, 95, 126, 0.55);
+}
+@keyframes prankCaught {
+    0% { transform: translateX(-50%) scale(1); }
+    40% { transform: translateX(-50%) scale(1.25); }
+    100% { transform: translateX(-50%) scale(1); }
+}
+.prank-final { display: none; }
+.prank-final.show { display: block; }
+
+/* --- 6. XO (IKS-OKS) --- */
+.turn-indicator {
+    font-size: 11.5px;
+    color: var(--ink-dim);
+    margin-bottom: 22px;
+    height: 15px;
+    font-family: var(--font-mono);
+}
+.board-xo {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 9px;
+    margin-bottom: 22px;
+}
+.cell-xo {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    height: 82px;
+    color: var(--rose);
+    font-size: 34px;
+    cursor: pointer;
+    transition: background .25s var(--ease), border-color .25s var(--ease);
+    display: flex; align-items: center; justify-content: center;
+}
+.cell-xo:hover {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+}
+.cell-xo.taken { cursor: not-allowed; animation: cellIn .3s var(--ease); }
+@keyframes cellIn {
+    0% { transform: scale(.5); opacity: 0; }
+    70% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); }
+}
+.modal-xo {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 8, 7, 0.96);
+    backdrop-filter: blur(14px);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.45s var(--ease);
+}
+.modal-xo.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+.modal-xo h2 {
+    font-family: var(--font-serif);
+    font-size: 25px;
+    font-weight: 600;
+    font-style: italic;
+    letter-spacing: .2px;
+    margin-bottom: 10px;
+    color: var(--rose);
+    text-shadow: 0 0 18px rgba(255, 95, 126, 0.35);
+}
+.modal-xo p {
+    font-size: 12.5px;
+    font-family: var(--font-mono);
+    color: rgba(242, 235, 224, 0.65);
+    margin-bottom: 24px;
+    line-height: 1.7;
+}
+.restart-btn {
+    background: var(--rose-dim);
+    border: 1px solid var(--rose);
+    border-radius: 2px;
+    padding: 13px 26px;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background .3s var(--ease), box-shadow .3s var(--ease), transform .3s var(--ease);
+}
+.restart-btn:hover, .restart-btn:focus-visible {
+    background: rgba(255, 95, 126, 0.32);
+    box-shadow: 0 0 22px rgba(255, 95, 126, 0.3);
+    transform: scale(1.04);
+}
+
+/* --- PRISTUPAČNOST: vidljivi fokus na tastaturu --- */
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--amber-bright);
+    outline-offset: 2px;
+}
+</style>
+</head>
+<body>
+
+<!-- ================= 1. INDEX / UVODNI EKRAN ================= -->
+<div id="view-index" class="view active">
+    <canvas id="matrix-rain"></canvas>
+    <canvas class="canvas-index"></canvas>
+    <div id="starsContainer" class="stars-container"></div>
+    <div id="fireworkContainer" class="firework-container"></div>
+</div>
+
+<!-- ================= 2. MENI ================= -->
+<div id="view-menu" class="view">
+    <div class="container">
+        <div class="heart-icon">♥</div>
+        <h1>Naš svemir</h1>
+        <div class="subtitle">Izaberi kutak našeg malog svijeta...</div>
+        <div class="menu-list">
+            <button class="menu-btn" onclick="switchView('univerzum')">
+                🌌 Naš univerzum<span>&gt;</span>
+            </button>
+            <button class="menu-btn" onclick="switchView('xo')">
+                ❌ Srce - Pusa (Igra)<span>&gt;</span>
+            </button>
+            <button class="menu-btn" onclick="switchView('tile')">
+                🃏 Pločice (Igra)<span>&gt;</span>
+            </button>
+            <button class="menu-btn" onclick="openVlogModal()">
+                🎥 Nas kratki edit (Video)<span>&gt;</span>
+            </button>
+        </div>
+        <div class="footer-text">Napravljeno s ljubavlju ❤️</div>
+    </div>
+</div>
+
+<!-- ================= POP-UP: NAŠ MALI VLOG ================= -->
+<div class="vlog-modal" id="vlogModal">
+    <div class="vlog-box">
+        <button class="vlog-close" id="closeVlog" type="button">×</button>
+        <video id="vlogVideo" controls playsinline preload="metadata">
+            <source src="vlog.mp4" type="video/mp4">
+            Tvoj preglednik ne podržava video.
+        </video>
+        <div class="vlog-title">Naš kratki edit ❤️</div>
+    </div>
+</div>
+
+<!-- ================= POP-UP: PRANK PITANJE ================= -->
+<div class="prank-modal" id="prankModal">
+    <div class="prank-box">
+        <div id="prankQuestionState">
+            <div class="heart-icon">♥</div>
+            <h2>Samo jedno pitanje...</h2>
+            <p id="prankQuestionText">Prihvataš li da si sada zvanično moja, zauvijek? 😏</p>
+            <div class="prank-counter" id="prankCounter"></div>
+            <div class="prank-btn-row">
+                <button class="prank-no-btn" onclick="prankNoClick()">Ne</button>
+                <button class="prank-yes-btn" id="prankYesBtn" onclick="prankCatch()">Prihvatam ❤️</button>
+            </div>
+        </div>
+        <div id="prankFinalState" class="prank-final">
+            <div class="heart-icon">♥</div>
+            <h2 id="prankFinalTitle">Uhvaćena!</h2>
+            <p id="prankFinalText">Znala sam da nema bijega. Volim te. ❤️</p>
+            <a class="back-link" style="margin-top:14px; font-size:13px;" onclick="closePrankModal()">Nastavi →</a>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 3. ŠIFRA ================= -->
+<div id="view-sifra" class="view">
+    <div class="container" id="mainContainerSifra">
+        <div class="heart-icon">♥</div>
+        <h1>Otključaj naš mali virtualni svijet</h1>
+        <div class="subtitle">Unesi šifru. Datum našeg pr... .....a . :P</div>
+        <div class="pin-display" id="pinDisplay">
+            <div class="pin-dot" id="dot-0"></div>
+            <div class="pin-dot" id="dot-1"></div>
+            <div class="pin-dot" id="dot-2"></div>
+            <div class="pin-dot" id="dot-3"></div>
+        </div>
+        <div class="custom-keypad">
+            <button class="key-btn" onclick="addNumber('1')">1</button>
+            <button class="key-btn" onclick="addNumber('2')">2</button>
+            <button class="key-btn" onclick="addNumber('3')">3</button>
+            <button class="key-btn" onclick="addNumber('4')">4</button>
+            <button class="key-btn" onclick="addNumber('5')">5</button>
+            <button class="key-btn" onclick="addNumber('6')">6</button>
+            <button class="key-btn" onclick="addNumber('7')">7</button>
+            <button class="key-btn" onclick="addNumber('8')">8</button>
+            <button class="key-btn" onclick="addNumber('9')">9</button>
+            <button class="key-btn" onclick="clearPin()" style="font-size: 14px; color: #ecc17e;">⌫</button>
+            <button class="key-btn" onclick="addNumber('0')">0</button>
+        </div>
+        <div class="hint" id="hintBox"></div>
+    </div>
+    <div class="success-screen" id="successScreen">
+        <div class="heart-icon">♥</div>
+        <h2>Bravo, ljubavi!</h2>
+        <p>Šifra je točna! Otključala si naš mali virtualni svijet.<br></p>
+        <a class="back-link" style="margin-top:20px; font-size:14px;" onclick="closeSuccess()">Idi u meni →</a>
+    </div>
+</div>
+
+<!-- ================= 4. PLOČICE (TILE) ================= -->
+<div id="view-tile" class="view">
+    <div class="container">
+        <div class="heart-icon">♥</div>
+        <h1>Ljubavne pločice</h1>
+        <div id="game-tiles"></div>
+        <div id="finalMessageTiles">Spojila si svaki dio mog srca! Volim te! 💖</div>
+        <a class="back-link" onclick="switchView('menu')">← Nazad u meni</a>
+    </div>
+</div>
+
+<!-- ================= 5. UNIVERZUM ================= -->
+<div id="view-univerzum" class="view">
+    <canvas id="space"></canvas>
+    <div class="intro-universe" id="introUniverse">
+        <div class="intro-content">
+            <div class="intro-small">Svemir stvoren za dvoje</div>
+            <h1>ERNES × DIJANA</h1>
+            <p>Postoji beskonačan svemir.<br>Ali moj najdraži dio njega si ti.<span class="intro-heart"> ♥</span></p>
+            <button class="enter" id="enterUniverse" type="button">Uroni u naš univerzum</button>
+        </div>
+    </div>
+    <div class="ui-universe">
+        <div class="top-universe">
+            <a class="back-btn" onclick="switchView('menu')">← Nazad</a>
+            <div class="heading-universe">Naš univerzum</div>
+            <div class="subtitle-universe">Naše memorije orbituju oko nas</div>
+        </div>
+        <div class="bottom-universe">∞ ti si moj univerzum ∞</div>
+    </div>
+    <div class="memory" id="memoryWindow">
+        <button class="close" id="closeMemory" type="button">×</button>
+        <img id="memoryImage" class="memory-image" src="" alt="Naša uspomena">
+        <div class="memory-heart">♥</div>
+        <div class="memory-date" id="memoryDate">datum</div>
+        <h2 id="memoryTitle">Naša uspomena</h2>
+        <p id="memoryText">Naša priča...</p>
+    </div>
+</div>
+
+<!-- ================= 6. IKS-OKS (XO) ================= -->
+<div id="view-xo" class="view">
+    <div class="container" style="position:relative;">
+        <div class="heart-icon">❤️</div>
+        <h1>Srce ili pusa</h1>
+        <div class="turn-indicator" id="turnIndicator">Red je na: ❤️ (Srce)</div>
+        <div class="board-xo" id="boardXo">
+            <div class="cell-xo" onclick="makeMoveXo(0)"></div>
+            <div class="cell-xo" onclick="makeMoveXo(1)"></div>
+            <div class="cell-xo" onclick="makeMoveXo(2)"></div>
+            <div class="cell-xo" onclick="makeMoveXo(3)"></div>
+            <div class="cell-xo" onclick="makeMoveXo(4)"></div>
+            <div class="cell-xo" onclick="makeMoveXo(5)"></div>
+            <div class="cell-xo" onclick="makeMoveXo(6)"></div>
+            <div class="cell-xo" onclick="makeMoveXo(7)"></div>
+            <div class="cell-xo" onclick="makeMoveXo(8)"></div>
+        </div>
+        <a class="back-link" onclick="switchView('menu')">← Nazad u meni</a>
+        <div class="modal-xo" id="resultModalXo">
+            <div class="heart-icon" id="modalIconXo">❤️</div>
+            <h2 id="resultTitleXo">Pobjeda!</h2>
+            <p id="resultTextXo">Ljubav je pobijedila.</p>
+            <button class="restart-btn" onclick="resetGameXo()">IGRAJ PONOVO</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- UPRAVLJANJE PRIKAZIMA (POGLEDUTIMA) ---
+function switchView(viewName) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const target = document.getElementById('view-' + viewName);
+    if(target) {
+        target.classList.add('active');
+        if(viewName === 'tile') initTiles();
+        if(viewName === 'univerzum') resizeUniverseCanvas();
+    }
+}
+
+// --- VLOG POP-UP LOGIKA ---
+const vlogModal = document.getElementById("vlogModal");
+const vlogVideo = document.getElementById("vlogVideo");
+function openVlogModal() {
+    vlogModal.classList.add("show");
+}
+function closeVlogModal() {
+    vlogModal.classList.remove("show");
+    vlogVideo.pause();
+}
+document.getElementById("closeVlog").addEventListener("click", closeVlogModal);
+vlogModal.addEventListener("click", event => { if (event.target === vlogModal) closeVlogModal(); });
+
+// --- 1. INDEX LOGIKA ---
+const postavke = {
+    matrixTekst: "SRETANROĐENDANDIJANA❤️",
+    matrixBoja1: "#e8c99a",
+    matrixBoja2: "#8a6636",
+    redoslijed: ["3","2","1","SRETAN","ROĐENDAN","DIJANA","HEART"],
+    vrijemeTeksta: 2000,
+    cekanjeNakonSrca: 3000
+};
+
+function pokreniMatrix() {
+    const canvas = document.getElementById("matrix-rain"), ctx = canvas.getContext("2d");
+    let w = window.innerWidth, h = window.innerHeight;
+    canvas.width = w; canvas.height = h;
+    const fontSize = 16; let cols = Math.floor(w/fontSize), drops = [];
+    for(let i=0; i<cols; i++) drops[i] = Math.random()*-50;
+    const znakovi = postavke.matrixTekst + "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    setInterval(() => {
+        ctx.fillStyle = "rgba(0,0,0,0.08)"; ctx.fillRect(0,0,w,h);
+        ctx.font = fontSize + "px Arial";
+        for(let i=0; i<drops.length; i++){
+            const znak = znakovi[Math.floor(Math.random()*znakovi.length)];
+            ctx.fillStyle = Math.random()>0.5 ? postavke.matrixBoja1 : postavke.matrixBoja2;
+            ctx.fillText(znak, i*fontSize, drops[i]*fontSize);
+            if(drops[i]*fontSize > h && Math.random()>0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }, 35);
+}
+
+const PS = {};
+PS.Crtanje = {
+    canvas: null, ctx: null, sirina: 0, visina: 0,
+    inicijalizuj(){
+        this.canvas = document.querySelector(".canvas-index");
+        this.ctx = this.canvas.getContext("2d");
+        this.resize();
+    },
+    resize(){
+        this.sirina = window.innerWidth; this.visina = window.innerHeight;
+        const dpr = Math.min(window.devicePixelRatio||1, 2);
+        this.canvas.width = this.sirina*dpr; this.canvas.height = this.visina*dpr;
+        this.canvas.style.width = this.sirina+"px"; this.canvas.style.height = this.visina+"px";
+        this.ctx.setTransform(dpr,0,0,dpr,0,0);
+    },
+    ocisti(){ this.ctx.clearRect(0,0,this.sirina,this.visina); },
+    krug(x,y,r,boja){
+        this.ctx.beginPath(); this.ctx.arc(x,y,r,0,Math.PI*2);
+        this.ctx.fillStyle = boja; this.ctx.fill();
+    }
+};
+
+PS.Tacka = function(x,y,z=1,alpha=1,boja='rgba(255,95,126,1)'){
+    this.x=x; this.y=y; this.z=z; this.alpha=alpha; this.boja=boja;
+    this.ciljX=x; this.ciljY=y; this.ciljZ=z; this.ciljAlpha=alpha; this.ciljBoja=boja;
+    this.brzina=0.09; this.velicina=1.4+Math.random()*1.3;
+};
+PS.Tacka.prototype.pomjeri = function(x,y,z,alpha=1,boja=null){
+    this.ciljX=x; this.ciljY=y; this.ciljZ=z; this.ciljAlpha=alpha;
+    if(boja) this.ciljBoja=boja;
+};
+PS.Tacka.prototype.azuriraj = function(){
+    this.x += (this.ciljX - this.x)*this.brzina;
+    this.y += (this.ciljY - this.y)*this.brzina;
+    this.z += (this.ciljZ - this.z)*this.brzina;
+    if(this.ciljAlpha!==undefined) this.alpha += (this.ciljAlpha - this.alpha)*0.12;
+    if(this.ciljBoja) this.boja = this.ciljBoja;
+};
+PS.Tacka.prototype.crtaj = function(){
+    if(this.alpha<0.01) return;
+    PS.Crtanje.krug(this.x, this.y, Math.max(0.2, this.velicina*(0.7+this.z*0.08)), this.boja);
+};
+
+PS.Oblik = {
+    napraviTekst(tekst){
+        const sw=window.innerWidth, sh=window.innerHeight;
+        const temp=document.createElement("canvas"), ctx=temp.getContext("2d");
+        temp.width=2400; temp.height=700;
+        let fSz=sw<400?130:sw<600?155:sw<900?220:300;
+        const maxW=sw*0.82;
+        while(fSz>40){
+            ctx.font="bold "+fSz+"px Arial";
+            if(ctx.measureText(tekst).width<=maxW) break;
+            fSz-=2;
+        }
+        ctx.font="bold "+fSz+"px Arial";
+        const tW=ctx.measureText(tekst).width, tH=fSz*1.4;
+        temp.width=Math.ceil(tW+100); temp.height=Math.ceil(tH+100);
+        ctx.font="bold "+fSz+"px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillStyle="#ffffff";
+        ctx.fillText(tekst, temp.width/2, temp.height/2);
+        const data=ctx.getImageData(0,0,temp.width,temp.height).data;
+        const gap=sw<600?5:6, tacke=[];
+        for(let y=0; y<temp.height; y+=gap){
+            for(let x=0; x<temp.width; x+=gap){
+                if(data[(y*temp.width+x)*4+3]>80) tacke.push({x,y});
+            }
+        }
+        if(tacke.length===0) return [];
+        let minX=Infinity, maxX=-Infinity, minY=Infinity, maxY=-Infinity;
+        tacke.forEach(t=>{minX=Math.min(minX,t.x); maxX=Math.max(maxX,t.x); minY=Math.min(minY,t.y); maxY=Math.max(maxY,t.y);});
+        const sX=(minX+maxX)/2, sY=(minY+maxY)/2, cX=sw/2, cY=sh/2;
+        return tacke.map(t=>({x: cX+(t.x-sX), y: cY+(t.y-sY)}));
+    },
+    napraviSrce(){
+        const sw=window.innerWidth, sh=window.innerHeight, tacke=[];
+        const vel=Math.min(sw,sh)*0.46, cX=sw/2, cY=sh/2;
+        const korak=sw<600?0.06:0.045;
+        for(let x=-16; x<=16; x+=0.48){
+            for(let y=-15; y<=15; y+=0.48){
+                const heartTerm = Math.pow(x*x + y*y - 1, 3) - x*x*Math.pow(y, 3);
+                if(heartTerm <= 0){
+                    if(Math.random() > 0.04){
+                        tacke.push({
+                            x: cX + x * vel / 16,
+                            y: cY + y * vel / 16,
+                            boja: `rgba(${255}, ${110 + Math.random()*30}, ${150 + Math.random()*25}, ${0.88 + Math.random()*0.12})`
+                        });
+                    }
+                }
+            }
+        }
+        for(let t=0; t<Math.PI*2; t+=korak){
+            const x=16*Math.pow(Math.sin(t),3);
+            const y=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));
+            tacke.push({x: cX+x*vel/16, y: cY+y*vel/16, boja: `rgba(255, 120, 170, 0.96)`});
+        }
+        return tacke;
+    },
+    napraviSrceSaUnutarnjimTekstom(){
+        const sw=window.innerWidth, sh=window.innerHeight;
+        const cx=sw/2, cy=sh/2;
+        const srce=this.napraviSrce();
+        const ime=this.napraviTekst("Ernes + Dijana").map(t => ({
+            x: cx + (t.x - cx) * 0.78,
+            y: cy + (t.y - cy) * 0.78,
+            boja: "rgba(255, 232, 180, 0.98)"
+        }));
+        const beskonacno=this.napraviTekst("∞").map(t => ({
+            x: cx + (t.x - cx) * 0.58,
+            y: cy + (t.y - cy) * 0.58 + 90,
+            boja: "rgba(255, 220, 150, 0.98)"
+        }));
+        return [...srce, ...ime, ...beskonacno];
+    }
+};
+
+PS.Sistem = {
+    tacke: [],
+    promijeniOblik(oblik){
+        const req=oblik.length, sw=window.innerWidth, sh=window.innerHeight;
+        while(this.tacke.length<req){
+            this.tacke.push(new PS.Tacka(sw/2+(Math.random()-0.5)*100, sh/2+(Math.random()-0.5)*100, 1, 0));
+        }
+        for(let i=0; i<this.tacke.length; i++){
+            if(i<req) this.tacke[i].pomjeri(oblik[i].x, oblik[i].y, 3, 1, oblik[i].boja || 'rgba(255,95,126,1)');
+            else this.tacke[i].pomjeri(sw/2, sh/2, 0, 0, 'rgba(255,95,126,0)');
+        }
+    },
+    azuriraj(){ for(let i=0; i<this.tacke.length; i++) this.tacke[i].azuriraj(); },
+    crtaj(){ for(let i=0; i<this.tacke.length; i++) this.tacke[i].crtaj(); }
+};
+
+function pokreniRedoslijedIndex(){
+    const redoslijed = postavke.redoslijed;
+    let indeks = 0;
+    function sljedeci(){
+        if(indeks >= redoslijed.length) return;
+        const trenutni = redoslijed[indeks++];
+        if(trenutni === "HEART"){
+            PS.Sistem.promijeniOblik(PS.Oblik.napraviSrceSaUnutarnjimTekstom());
+            setTimeout(()=>{
+                document.getElementById("starsContainer").style.display="block";
+                const fc=document.getElementById("fireworkContainer");
+                fc.style.opacity="1"; fc.innerHTML="";
+                for(let i=0; i<24; i++){
+                    const c=document.createElement("div"); c.className="firework";
+                    c.style.transform=`rotate(${i*15}deg) translateY(0)`;
+                    c.style.animationDelay=Math.random()*0.3+"s";
+                    fc.appendChild(c);
+                }
+                setTimeout(()=>{ fc.style.opacity="0"; }, 1500);
+            }, 900);
+            // Ovdje prebacujemo s Indexa na Šifru umjesto na meni!
+            setTimeout(()=>{ switchView('sifra'); }, postavke.cekanjeNakonSrca);
+            return;
+        }
+        PS.Sistem.promijeniOblik(PS.Oblik.napraviTekst(trenutni));
+        setTimeout(sljedeci, postavke.vrijemeTeksta);
+    }
+    sljedeci();
+}
+
+
+// --- 3. ŠIFRA LOGIKA ---
+const tajnaSifra = "2805";
+let trenutniUnos = "";
+const hintovi = [
+    "Netočno, Dinči. Sjeti se datuma kad su se naši pogledi prvi put susreli (Maj).",
+    "Još jednom pokušaj! Dani kad je sve počelo...",
+    "Griješiš namjerno da vidiš šta te čeka, priznaj! 😄 Probaj ponovo.",
+    "Hajde, malo bolje razmisli! Onaj dan kad nam se život promijenio..."
+];
+let pokusaji = 0;
+
+function addNumber(num) {
+    if (trenutniUnos.length < 4) {
+        trenutniUnos += num;
+        updateDisplaySifra();
+        if (trenutniUnos.length === 4) {
+            setTimeout(checkPin, 300);
+        }
+    }
+}
+function clearPin() {
+    trenutniUnos = trenutniUnos.slice(0, -1);
+    updateDisplaySifra();
+    document.getElementById("hintBox").textContent = "";
+}
+function updateDisplaySifra() {
+    for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        if (i < trenutniUnos.length) dot.classList.add("filled");
+        else dot.classList.remove("filled");
+    }
+}
+function checkPin() {
+    if (trenutniUnos === tajnaSifra) {
+        document.getElementById("successScreen").classList.add("show");
+    } else {
+        document.getElementById("hintBox").textContent = hintovi[pokusaji % hintovi.length];
+        pokusaji++;
+        const container = document.getElementById("mainContainerSifra");
+        container.style.transform = "translateX(10px)";
+        setTimeout(() => container.style.transform = "translateX(-10px)", 100);
+        setTimeout(() => container.style.transform = "translateX(0)", 200);
+        trenutniUnos = "";
+        updateDisplaySifra();
+    }
+}
+function closeSuccess() {
+    document.getElementById("successScreen").classList.remove("show");
+    setTimeout(() => { if (!prankDone) openPrankModal(); }, 550);
+    switchView('menu'); // Kada se pogodi šifra, otvara se glavni meni!
+}
+
+
+// --- 4. TILE (PLOČICE) LOGIKA ---
+function initTiles() {
+    const emojis = ['💖','🌸','😘','💕','😍','🌷','💖','🌸','😘','💕','😍','🌷'];
+    const game = document.getElementById('game-tiles');
+    const finalMessage = document.getElementById('finalMessageTiles');
+    game.innerHTML = '';
+    finalMessage.style.display = 'none';
+    
+    let firstTile = null;
+    let lockBoard = false;
+    let matchedCount = 0;
+
+    emojis.sort(() => 0.5 - Math.random());
+
+    emojis.forEach((emoji, index) => {
+        const tile = document.createElement('div');
+        tile.classList.add('tile');
+        tile.dataset.emoji = emoji;
+        tile.textContent = '';
+        game.appendChild(tile);
+
+        tile.addEventListener('click', () => {
+            if (lockBoard || tile.classList.contains('matched') || tile === firstTile) return;
+            tile.textContent = emoji;
+            tile.classList.add('flipped');
+
+            if (!firstTile) {
+                firstTile = tile;
+            } else {
+                lockBoard = true;
+                if (tile.dataset.emoji === firstTile.dataset.emoji) {
+                    tile.classList.add('matched');
+                    firstTile.classList.add('matched');
+                    matchedCount += 2;
+                    firstTile = null;
+                    lockBoard = false;
+                    if (matchedCount === emojis.length) {
+                        finalMessage.style.display = 'block';
+                    }
+                } else {
+                    setTimeout(() => {
+                        tile.textContent = '';
+                        tile.classList.remove('flipped');
+                        firstTile.textContent = '';
+                        firstTile.classList.remove('flipped');
+                        firstTile = null;
+                        lockBoard = false;
+                    }, 800);
+                }
+            }
+        });
+    });
+}
+
+
+// --- 5. UNIVERZUM LOGIKA ---
+const canvasSpace = document.getElementById("space");
+const ctxSpace = canvasSpace.getContext("2d");
+let widthS = 0, heightS = 0, dprS = 1, startedUniverse = false, rotationUniverse = 0, zoomUniverse = 1, draggingUniverse = false, lastXUniverse = 0;
+
+const memories = [
+    { title: "Prvo naše viđenje", date: "28.05.2025", text: "Jedan upaljač, nas je doveo da se naši pogledi susretnu", image: "slike/memorija1.jpg", angle: .2, radius: 78, size: 13 },
+    { title: "Naš prvi izlazak", date: "03.06.2025", text: "Kinder bueno hmmmm... Sigruno voli, šta mogu pogriješiti. Pješice doći oznojiti se. Nisam ni slutio kud ovo vodi.", image: "slike/memorija2.jpg", angle: 1.25, radius: 120, size: 11 },
+    { title: "Naš prvi poljubac", date: "Ne znam datum. sryyy <3", text: "Desio na RIBIĆKOM POGLEDU, Bilo je malo natezanja i smijeha, a onda sam uspio... prepustili smo se i uronili u savršeni poljubac koji nam je zaustavio u svako vrijeme.", image: "slike/memorija3.jpg", angle: 2.3, radius: 165, size: 12 },
+    { title: "Naše prvo putovanje", date: "16.05.2026", text: "Naše prvo zajedničko putovanje odvelo nas je u Italiju – bilo je tu malih nesporazuma i traženja puta do najboljeg kafića oduševili se talijanskom kulturom. PIJU,PIJU zZzZz", image: "slike/memorija4.jpg", angle: 3.45, radius: 210, size: 10 },
+    { title: "Naše prvo more", date: "19.06.2026", text: "Prvo more u dvoje! Nije sve išlo savršeno glatko od prve oko pakiranja i polaska, ali kad smo stigli do plaže, zaboravili smo na sve i prepustili se opuštanju, valovima i suncu. Prvi put sam pročitao knjigu na našem prvom moru, to mi se urezalo u pamćenje i stvorila si mi novu ljubav prema nečemu.", image: "slike/memorija5.jpg", angle: 4.6, radius: 255, size: 12 },
+    { title: "NAŠ ZAJEDNIČKI PIXEL ART", date: "i dont knoww i dont have every infooo soryy Dajanaaaaaaaaaa", text: "Možda za druge to je samo par običnih kvadratića na mapi Wplacea, ali za nas je to mali digitalni spomenik našoj ljubavi. Gradili smo ga piksel po piksel, s toliko pažnje i osmijeha – baš kao što gradimo i našu zajedničku budućnost. Mali znak na ekranu, a nama vječna uspomena ✨", image: "slike/memorija6.jpg", angle: 5.65, radius: 300, size: 12 },
+    { title: "ZAVUVIJEK I ZA JOŠ BESKONACNO MEMORIJA", date: "ZAUVIJEK", text: "Želim da stvaramo uspomene zauvijek. Svaki trenutak s tobom je zvijezda koja svijetli u mom svemiru, a s tobom želim izgraditi cijelu galaksiju sretnih dana, zagrljaja i zajedničkih priča koje nikada neće izblijedjeti. VOLIM TEEE! <3", image: "slike/memorija7.jpg", angle: 6.40, radius: 345, size: 12 }
+];
+
+const starsUniverse = [], particlesUniverse = [], heartsUniverse = [];
+
+function createStarsUniverse() {
+    starsUniverse.length = 0;
+    for (let i = 0; i < 2200; i++) {
+        starsUniverse.push({ x: Math.random()*widthS, y: Math.random()*heightS, size: .25 + Math.random()*1.6, alpha: .2 + Math.random()*.7 });
+    }
+}
+function createParticlesUniverse() {
+    particlesUniverse.length = 0;
+    for (let i = 0; i < 420; i++) {
+        particlesUniverse.push({ orbit: Math.floor(Math.random()*7), angle: Math.random()*Math.PI*2, speed: .003 + Math.random()*.009, size: .5 + Math.random()*1.6 });
+    }
+}
+function createHeartsUniverse() {
+    heartsUniverse.length = 0;
+    for (let i = 0; i < 110; i++) {
+        heartsUniverse.push({ radius: 55 + Math.random()*310, angle: Math.random()*Math.PI*2, speed: .0015 + Math.random()*.004, size: 3 + Math.random()*5, alpha: .25 + Math.random()*.6 });
+    }
+}
+
+function resizeUniverseCanvas() {
+    widthS = window.innerWidth; heightS = window.innerHeight;
+    dprS = Math.min(window.devicePixelRatio||1, 2);
+    canvasSpace.width = widthS * dprS; canvasSpace.height = heightS * dprS;
+    canvasSpace.style.width = widthS + "px"; canvasSpace.style.height = heightS + "px";
+    ctxSpace.setTransform(dprS, 0, 0, dprS, 0, 0);
+    createStarsUniverse();
+}
+
+function drawHeartShape(x, y, size, alpha) {
+    ctxSpace.save();
+    ctxSpace.globalAlpha = alpha;
+    ctxSpace.translate(x, y);
+    ctxSpace.scale(size, size);
+    ctxSpace.beginPath();
+    ctxSpace.moveTo(0, .35);
+    ctxSpace.bezierCurveTo(-.9, -.35, -1, -1.05, -.45, -1.15);
+    ctxSpace.bezierCurveTo(-.12, -1.2, 0, -.88, 0, -.65);
+    ctxSpace.bezierCurveTo(0, -.88, .12, -1.2, .45, -1.15);
+    ctxSpace.bezierCurveTo(1, -1.05, .9, -.35, 0, .35);
+    ctxSpace.fillStyle = "#ff5f7e";
+    ctxSpace.shadowBlur = 12; ctxSpace.shadowColor = "#d43e63";
+    ctxSpace.fill();
+    ctxSpace.restore();
+}
+
+function drawUniverseLoop() {
+    ctxSpace.clearRect(0, 0, widthS, heightS);
+    const centerX = widthS / 2, centerY = heightS / 2;
+
+    for (const star of starsUniverse) {
+        star.x += .012;
+        if (star.x > widthS) star.x = 0;
+        ctxSpace.globalAlpha = star.alpha;
+        ctxSpace.fillStyle = "#ffffff";
+        ctxSpace.beginPath();
+        ctxSpace.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctxSpace.fill();
+    }
+    ctxSpace.globalAlpha = 1;
+
+    const maxRadius = Math.min(widthS, heightS) * .44 * zoomUniverse;
+    const orbitSizes = [.22, .32, .43, .54, .65, .76, .88];
+
+    for (let i = 0; i < orbitSizes.length; i++) {
+        const q = orbitSizes[i];
+        ctxSpace.save();
+        ctxSpace.translate(centerX, centerY);
+        ctxSpace.rotate(rotationUniverse * .18 + (i - 3) * .08);
+        ctxSpace.strokeStyle = i === 6 ? "rgba(255,95,126,.26)" : "rgba(207,154,85,.14)";
+        ctxSpace.lineWidth = i === 6 ? 1.2 : 1;
+        ctxSpace.beginPath();
+        ctxSpace.ellipse(0, 0, maxRadius * q, maxRadius * q * .39, 0, 0, Math.PI * 2);
+        ctxSpace.stroke();
+        ctxSpace.restore();
+    }
+
+    for (const particle of particlesUniverse) {
+        const radii = [78, 120, 165, 210, 255, 300, 345];
+        const radius = radii[particle.orbit] * zoomUniverse;
+        particle.angle += particle.speed;
+        const angle = particle.angle + rotationUniverse * (.25 + particle.orbit * .04);
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius * .39;
+        ctxSpace.globalAlpha = .45;
+        ctxSpace.fillStyle = "#e8c99a";
+        ctxSpace.shadowBlur = 7; ctxSpace.shadowColor = "#cf9a55";
+        ctxSpace.beginPath();
+        ctxSpace.arc(x, y, particle.size, 0, Math.PI * 2);
+        ctxSpace.fill();
+    }
+
+    for (const heart of heartsUniverse) {
+        heart.angle += heart.speed;
+        const angle = heart.angle + rotationUniverse * .16;
+        const x = centerX + Math.cos(angle) * heart.radius * zoomUniverse;
+        const y = centerY + Math.sin(angle) * heart.radius * .39 * zoomUniverse;
+        drawHeartShape(x, y, heart.size / 7, heart.alpha);
+    }
+
+    for (let i = 0; i < memories.length; i++) {
+        const memory = memories[i];
+        const radius = memory.radius * zoomUniverse;
+        const angle = memory.angle + rotationUniverse * (.35 + i * .055);
+        memory.x = centerX + Math.cos(angle) * radius;
+        memory.y = centerY + Math.sin(angle) * radius * .39;
+
+        ctxSpace.fillStyle = i === memories.length - 1 ? "#ff5f7e" : "#d9b98a";
+        ctxSpace.shadowBlur = 25; ctxSpace.shadowColor = "#ff4d91";
+        ctxSpace.beginPath();
+        ctxSpace.arc(memory.x, memory.y, memory.size, 0, Math.PI * 2);
+        ctxSpace.fill();
+        drawHeartShape(memory.x, memory.y - 2, memory.size / 5, .8);
+    }
+    ctxSpace.shadowBlur = 0;
+
+    const pulse = 1 + Math.sin(performance.now() / 260) * .045;
+    const glow = ctxSpace.createRadialGradient(centerX, centerY, 3, centerX, centerY, 90 * zoomUniverse);
+    glow.addColorStop(0, "rgba(255,210,225,.95)");
+    glow.addColorStop(.12, "rgba(255,90,145,.75)");
+    glow.addColorStop(.4, "rgba(255,50,125,.2)");
+    glow.addColorStop(1, "rgba(255,50,125,0)");
+    ctxSpace.fillStyle = glow;
+    ctxSpace.beginPath();
+    ctxSpace.arc(centerX, centerY, 90 * zoomUniverse, 0, Math.PI * 2);
+    ctxSpace.fill();
+
+    drawHeartShape(centerX, centerY, 18 * pulse, .98);
+
+    requestAnimationFrame(drawUniverseLoop);
+}
+
+document.getElementById("enterUniverse").addEventListener("click", () => {
+    startedUniverse = true;
+    document.getElementById("introUniverse").classList.add("hidden");
+    createParticlesUniverse();
+    createHeartsUniverse();
+});
+
+canvasSpace.addEventListener("pointerdown", event => {
+    draggingUniverse = true; lastXUniverse = event.clientX;
+    canvasSpace.setPointerCapture(event.pointerId);
+});
+canvasSpace.addEventListener("pointermove", event => {
+    if (!draggingUniverse) return;
+    rotationUniverse += (event.clientX - lastXUniverse) * .006;
+    lastXUniverse = event.clientX;
+});
+canvasSpace.addEventListener("pointerup", () => { draggingUniverse = false; });
+canvasSpace.addEventListener("pointercancel", () => { draggingUniverse = false; });
+canvasSpace.addEventListener("wheel", event => {
+    event.preventDefault();
+    zoomUniverse -= event.deltaY * .0007;
+    zoomUniverse = Math.max(.55, Math.min(1.7, zoomUniverse));
+}, { passive: false });
+
+canvasSpace.addEventListener("click", event => {
+    if (!startedUniverse) return;
+    let selected = -1, closest = 35;
+    for (let i = 0; i < memories.length; i++) {
+        const memory = memories[i];
+        const distance = Math.hypot(event.clientX - memory.x, event.clientY - memory.y);
+        if (distance < closest) { closest = distance; selected = i; }
+    }
+    if (selected >= 0) openMemoryModal(selected);
+});
+
+const memoryWindow = document.getElementById("memoryWindow");
+function openMemoryModal(index) {
+    const memory = memories[index];
+    document.getElementById("memoryDate").textContent = memory.date;
+    document.getElementById("memoryTitle").textContent = memory.title;
+    document.getElementById("memoryText").textContent = memory.text;
+    const img = document.getElementById("memoryImage");
+    img.onerror = () => { img.style.display = "none"; };
+    img.onload = () => { img.style.display = "block"; };
+    img.style.display = "block";
+    img.src = memory.image; img.alt = memory.title;
+    memoryWindow.classList.add("show");
+}
+document.getElementById("closeMemory").addEventListener("click", () => { memoryWindow.classList.remove("show"); });
+memoryWindow.addEventListener("click", event => { if (event.target === memoryWindow) memoryWindow.classList.remove("show"); });
+
+
+// --- 6. IKS-OKS (XO) LOGIKA ---
+let boardXo = ["", "", "", "", "", "", "", "", ""];
+let currentPlayerXo = "❤️";
+let gameActiveXo = true;
+const winningConditionsXo = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
+];
+
+function makeMoveXo(index) {
+    if (boardXo[index] !== "" || !gameActiveXo) return;
+    boardXo[index] = currentPlayerXo;
+    const cells = document.querySelectorAll("#boardXo .cell-xo");
+    cells[index].textContent = currentPlayerXo;
+    cells[index].classList.add("taken");
+    checkWinnerXo();
+}
+
+function checkWinnerXo() {
+    let roundWon = false;
+    for (let i = 0; i < winningConditionsXo.length; i++) {
+        const [a, b, c] = winningConditionsXo[i];
+        if (boardXo[a] === "" || boardXo[b] === "" || boardXo[c] === "") continue;
+        if (boardXo[a] === boardXo[b] && boardXo[b] === boardXo[c]) { roundWon = true; break; }
+    }
+    if (roundWon) { endGameXo(false); return; }
+    let roundDraw = !boardXo.includes("");
+    if (roundDraw) { endGameXo(true); return; }
+
+    currentPlayerXo = currentPlayerXo === "❤️" ? "💋" : "❤️";
+    document.getElementById("turnIndicator").textContent = 
+        currentPlayerXo === "❤️" ? "Red je na: ❤️ (Srce)" : "Red je na: 💋 (Pusu)";
+}
+
+function endGameXo(isDraw) {
+    gameActiveXo = false;
+    const modal = document.getElementById("resultModalXo");
+    const resultTitle = document.getElementById("resultTitleXo");
+    const resultText = document.getElementById("resultTextXo");
+    const modalIcon = document.getElementById("modalIconXo");
+
+    if (isDraw) {
+        modalIcon.textContent = "❤️";
+        resultTitle.textContent = "NERIJEŠENO!";
+        resultText.textContent = "Baš kao u ljubavi – savršeno izjednačeni! Nema gubitnika kad smo zajedno.";
+    } else {
+        modalIcon.textContent = currentPlayerXo;
+        resultTitle.textContent = `POBJEDNIK JE ${currentPlayerXo}!`;
+        resultText.textContent = currentPlayerXo === "❤️" ? "Srce je odnijelo pobjedu! Poljubac, mogu li dobiti? ❤️" : "Pusa je pobjedila! Poljubac, mogu li dobiti? 💋";
+    }
+    modal.classList.add("show");
+}
+
+function resetGameXo() {
+    boardXo = ["", "", "", "", "", "", "", "", ""];
+    currentPlayerXo = "❤️";
+    gameActiveXo = true;
+    document.getElementById("turnIndicator").textContent = "Red je na: ❤️ (Srce)";
+    const cells = document.querySelectorAll("#boardXo .cell-xo");
+    cells.forEach(c => { c.textContent = ""; c.classList.remove("taken"); });
+    document.getElementById("resultModalXo").classList.remove("show");
+}
+
+
+// --- PRANK: DUGME KOJE BJEŽI ---
+let prankDone = false;
+let prankDodges = 0;
+const PRANK_DODGES_TO_CATCH = 6; // nakon ovoliko bježanja, dugme se "umori" i pusti da ga uhvatiš
+const prankFunnyLines = [
+    "Prihvataš li da si sada zvanično moja, zauvijek? 😏",
+    "Sigurno? Razmisli još malo... 👀",
+    "Hajde, samo klikni, nije teško 😌",
+    "Ovo dugme ima trag noge, izgleda 🦵",
+    "Skoro pa skoro... skoro 😏",
+    "Ok ozbiljno sad, stoji mirno... skoro 🫡",
+    "Dobro, dobro, predajem se. Evo ga."
+];
+
+const prankModal = document.getElementById("prankModal");
+const prankYesBtn = document.getElementById("prankYesBtn");
+const prankBtnRow = document.querySelector(".prank-btn-row");
+const prankQuestionText = document.getElementById("prankQuestionText");
+const prankCounter = document.getElementById("prankCounter");
+
+function openPrankModal() {
+    prankModal.classList.add("show");
+    prankDodges = 0;
+    prankQuestionText.textContent = prankFunnyLines[0];
+    prankCounter.textContent = "";
+    prankYesBtn.style.top = "0px";
+    prankYesBtn.style.left = "50%";
+    prankYesBtn.style.transform = "translateX(-50%)";
+    document.getElementById("prankQuestionState").style.display = "block";
+    document.getElementById("prankFinalState").classList.remove("show");
+}
+
+function closePrankModal() {
+    prankModal.classList.remove("show");
+    prankDone = true;
+}
+
+function prankDodge() {
+    if (prankDodges >= PRANK_DODGES_TO_CATCH) return;
+    const rowRect = prankBtnRow.getBoundingClientRect();
+    const btnRect = prankYesBtn.getBoundingClientRect();
+    const maxX = Math.max(0, rowRect.width - btnRect.width);
+    const maxY = Math.max(0, rowRect.height - btnRect.height);
+    const newX = Math.random() * maxX;
+    const newY = Math.random() * maxY;
+    prankYesBtn.style.transform = "none";
+    prankYesBtn.style.left = newX + "px";
+    prankYesBtn.style.top = newY + "px";
+
+    prankDodges++;
+    const lineIndex = Math.min(prankDodges, prankFunnyLines.length - 1);
+    prankQuestionText.textContent = prankFunnyLines[lineIndex];
+    prankCounter.textContent = `pokušaj br. ${prankDodges}...`;
+
+    if (prankDodges >= PRANK_DODGES_TO_CATCH) {
+        prankYesBtn.classList.add("caught");
+        prankCounter.textContent = "dobro, evo, ne bježim više 🙂";
+    }
+}
+
+// Miš pobjegne prije nego što stigne kliknuti
+prankYesBtn.addEventListener("mouseenter", prankDodge);
+// Na dodir (mobitel) prvi dodiri isto bježe, dok se ne "umori"
+prankYesBtn.addEventListener("touchstart", (event) => {
+    if (prankDodges < PRANK_DODGES_TO_CATCH) {
+        event.preventDefault();
+        prankDodge();
+    }
+}, { passive: false });
+
+function prankCatch() {
+    if (prankDodges < PRANK_DODGES_TO_CATCH) {
+        // ne bi trebalo doći do ovoga na desktopu jer mouseenter bježi prije klika,
+        // ali za svaki slučaj (npr. tab+enter) ipak ga pošalji da pobjegne
+        prankDodge();
+        return;
+    }
+    document.getElementById("prankQuestionState").style.display = "none";
+    document.getElementById("prankFinalState").classList.add("show");
+}
+
+function prankNoClick() {
+    prankQuestionText.textContent = "Ne je pogrešan odgovor, probaj ponovo 💕";
+}
+
+prankModal.addEventListener("click", event => {
+    if (event.target === prankModal) {
+        // ne zatvaramo na klik izvan - neka se malo pati prvo :)
+    }
+});
+
+// --- INICIJALIZACIJA PRILIKOM UČITAVANJA ---
+window.addEventListener("load", () => {
+    pokreniMatrix();
+    PS.Crtanje.inicijalizuj();
+    (function animacijaIndex(){
+        PS.Crtanje.ocisti();
+        PS.Sistem.azuriraj();
+        PS.Sistem.crtaj();
+        requestAnimationFrame(animacijaIndex);
+    })();
+    setTimeout(pokreniRedoslijedIndex, 500);
+
+    // Pokreni petlju za svemir u pozadini
+    resizeUniverseCanvas();
+    drawUniverseLoop();
+
+    window.addEventListener("resize", () => {
+        PS.Crtanje.resize();
+        resizeUniverseCanvas();
+    });
+});
+</script>
+
+</body>
+</html>
